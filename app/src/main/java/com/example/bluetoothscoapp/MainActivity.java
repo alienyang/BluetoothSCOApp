@@ -1,6 +1,10 @@
 package com.example.bluetoothscoapp;
 
 import android.Manifest;
+import android.content.BroadcastReceiver;
+import android.content.Context;
+import android.content.Intent;
+import android.content.IntentFilter;
 import android.content.pm.PackageManager;
 import android.media.AudioManager;
 import android.os.Bundle;
@@ -9,7 +13,6 @@ import android.speech.RecognizerIntent;
 import android.speech.SpeechRecognizer;
 import android.widget.Button;
 import android.widget.TextView;
-import android.content.Intent;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.app.ActivityCompat;
 import androidx.core.content.ContextCompat;
@@ -23,6 +26,16 @@ public class MainActivity extends AppCompatActivity {
     private SpeechRecognizer speechRecognizer;
     private boolean isScoOn = false;
 
+    private final BroadcastReceiver scoReceiver = new BroadcastReceiver() {
+        @Override
+        public void onReceive(Context context, Intent intent) {
+            int state = intent.getIntExtra(AudioManager.EXTRA_SCO_AUDIO_STATE, -1);
+            if (state == AudioManager.SCO_AUDIO_STATE_CONNECTED) {
+                startListening();
+            }
+        }
+    };
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -35,6 +48,8 @@ public class MainActivity extends AppCompatActivity {
         checkAndRequestPermissions();
         setupSpeechRecognizer();
         setupButtonClickListener();
+
+        registerReceiver(scoReceiver, new IntentFilter(AudioManager.ACTION_SCO_AUDIO_STATE_UPDATED));
     }
 
     private void checkAndRequestPermissions() {
@@ -70,6 +85,7 @@ public class MainActivity extends AppCompatActivity {
                     String text = matches.get(0);
                     tvTranscription.setText(text);
                 }
+                stopSco();
             }
 
             @Override
@@ -115,7 +131,6 @@ public class MainActivity extends AppCompatActivity {
         audioManager.setBluetoothScoOn(true);
         isScoOn = true;
         btnToggleSco.setText("Stop Bluetooth SCO");
-        startListening();
     }
 
     private void stopSco() {
@@ -143,5 +158,6 @@ public class MainActivity extends AppCompatActivity {
         if (isScoOn) {
             stopSco();
         }
+        unregisterReceiver(scoReceiver);
     }
 }
