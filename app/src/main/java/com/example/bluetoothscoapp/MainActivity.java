@@ -134,11 +134,11 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private void stopSco() {
+        speechRecognizer.stopListening();
         audioManager.stopBluetoothSco();
         audioManager.setBluetoothScoOn(false);
         isScoOn = false;
         btnToggleSco.setText("Start Bluetooth SCO");
-        speechRecognizer.stopListening();
     }
 
     private void startListening() {
